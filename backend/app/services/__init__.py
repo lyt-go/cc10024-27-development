@@ -11,6 +11,7 @@ from app.services.quality_guard import QualityGuardService
 from app.services.script_schedule import ScriptScheduleService
 from app.services.login_mgr import LoginMgrService
 from app.services.page_snapshot import PageSnapshotService
+from app.services.extract_batch import ExtractBatchService
 from app.services.error_recover import ErrorRecoverService
 from app.services.page_dedup import PageDedupService
 from app.services.field_normalize import FieldNormalizeService
@@ -31,6 +32,7 @@ SERVICES: dict[str, BaseModuleService] = {
     "script_schedule": ScriptScheduleService(),
     "login_mgr": LoginMgrService(),
     "page_snapshot": PageSnapshotService(),
+    "extract_batch": ExtractBatchService(),
     "error_recover": ErrorRecoverService(),
     "page_dedup": PageDedupService(),
     "field_normalize": FieldNormalizeService(),

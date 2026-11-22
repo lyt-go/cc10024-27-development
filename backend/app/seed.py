@@ -328,6 +328,7 @@ SEED_ROWS: dict[str, list[dict[str, Any]]] = {
   '快照类型': '页面快照样例3',
   '数据量': '页面快照样例3',
   '回收时间': '2026-09-03'}],
+    "extract_batch": [],
     "error_recover": [{'id': 1,
   'status': '待处理',
   'pending': True,

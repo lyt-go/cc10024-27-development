@@ -11,17 +11,36 @@
 .
 ├── frontend/                 Vue 3 + Vite + TypeScript 前端
 │   ├── src/views/WorkbenchView.vue|tsx  全部模块共享工作台
-│   ├── src/data/modules.ts              18个业务模块配置
+│   ├── src/data/modules.ts              19个业务模块配置
 │   ├── src/api/              统一请求封装
 │   └── vite.config.ts        dev server 配置（open: false）
 ├── backend/                  FastAPI（Python） 后端
 │   ├── app/routers/resource.py  通用查询/导出/登记/动作接口
+│   ├── app/routers/handoff.py   清洗后交接：清洗产物发布/正文接收/结构化行/回放
 │   ├── app/services/<key>.py    每个模块独立领域逻辑
 │   ├── app/services/base.py     共享服务骨架
 │   └── app/store.py          内存数据仓库与示例数据
 ├── .gitignore
 └── docker-compose.yml
 ```
+
+## 清洗后交接流程
+
+页面快照存档后本身只留摘要和预览，不能直接交给抽取模板。清洗后交接补齐
+「已清洗快照产物 → 抽取批次 → 结构化行」的可回放链路（状态流转只在服务层发生）：
+
+1. `POST /api/handoffs/snapshots/{id}/clean`：生成已清洗快照产物（可读正文 + 转换依据），
+   未产出可读正文不能进入「已清洗」；重复清洗幂等，不重写产物。
+2. `POST /api/handoffs/snapshots/{id}/publish`：在快照入口发布交接并冻结实际模板版本，
+   生成 `extract_batch` 批次（待发布）；同一快照重复发布复用同一批次。
+3. `POST /api/handoffs/batches/{id}/receive`：接收可读正文；重复确认只计次数，不改写正文。
+   正文已接收但结构化行未写入时，可用 `.../retry-receive` 核对未完成原因并再次接收。
+4. `POST /api/handoffs/batches/{id}/extract`：抽取模板解析正文并持久化正式结构化行
+   （兼容旧标签结构「价格：7」与结构变更后的 `<price>9</price>`）；重复抽取不改写结果。
+5. 结构化行未写入时「确认交付」被拒绝；交付后 `GET .../replay` 可按批回放
+   正文、转换依据、模板版本与结构化行，新页面入档不影响旧批次回放。
+6. 产物落在 `data/snapshots/cleaned_*.json` 与 `data/handoffs/`，按业务编号命名，
+   内存仓库重建后也不会串档。前端入口为侧边栏「清洗后交接台」（`/handoff-console`）。
 
 ## 启动
 
@@ -59,6 +78,7 @@ npm run dev
 | 脚本调度 | `script_schedule` | 调度计划 | 计划编号、关联脚本、触发条件 |
 | 登录凭证 | `login_mgr` | 登录凭证 | 凭证编号、目标站点、认证方式 |
 | 页面快照 | `page_snapshot` | 页面快照 | 快照编号、采集来源、页面版本 |
+| 抽取批次 | `extract_batch` | 抽取批次 | 批次编号、关联快照、模板版本、接收次数 |
 | 错误恢复 | `error_recover` | 恢复任务 | 任务编号、关联计划、失败步骤 |
 | 页面去重 | `page_dedup` | 去重规则 | 规则编号、去重维度、特征字段 |
 | 字段归一化 | `field_normalize` | 归一规则 | 规则编号、关联字段、归一类型 |

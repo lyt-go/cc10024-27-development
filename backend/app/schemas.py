@@ -29,3 +29,13 @@ class EntryPayload(BaseModel):
 class ActionPayload(BaseModel):
     action: str
     remark: str | None = None
+
+
+class PublishHandoffPayload(BaseModel):
+    template_id: int
+
+
+class CleanSnapshotPayload(BaseModel):
+    readable_text: str
+    transform_basis: list[dict[str, Any]] = Field(default_factory=list)
+
